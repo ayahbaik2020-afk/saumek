@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SAUMEK — Sistem Inventory & Peminjaman Barang
 
-## Getting Started
+Aplikasi web untuk **Team Mekanik** untuk mengelola inventory barang, identifikasi barang
+dengan **QR Code**, peminjaman, pengembalian, monitoring kondisi barang, dan histori
+penggunaan barang.
 
-First, run the development server:
+**Live:** https://saumek.vercel.app
+
+## Tech Stack
+
+| Layer      | Teknologi                          |
+| ---------- | ---------------------------------- |
+| Frontend   | Next.js 16 · React 19 · TypeScript |
+| Styling    | Tailwind CSS v4                    |
+| Database   | Supabase (PostgreSQL)              |
+| Auth       | Supabase Auth (email/password)     |
+| Storage    | Supabase Storage (foto barang)     |
+| QR         | `html5-qrcode` (scan) · `qrcode`   |
+| Export     | `xlsx` (Excel) / CSV               |
+| Deployment | Vercel                             |
+
+## Fitur (MVP)
+
+- Login & role-based access (Admin / Mechanic / Supervisor)
+- Master barang, kategori, lokasi
+- Generate & print QR Code
+- Scan QR Code via kamera smartphone
+- Peminjaman multi-item, pengembalian partial
+- Status barang otomatis (AVAILABLE → BORROWED → AVAILABLE)
+- Dashboard monitoring + deteksi overdue
+- Histori barang & transaksi
+- User management
+- Audit trail
+- Laporan export Excel/CSV
+- Maintenance & stock opname (lanjutan)
+
+## Persiapan Environment
+
+1. Buat project di [Supabase](https://supabase.com).
+2. Jalankan `supabase/schema.sql` pada **SQL Editor**.
+3. Salin `.env.example` menjadi `.env.local` dan isi kredensial:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...      # server-only, jangan bocorkan ke client
+NEXT_PUBLIC_COMPANY_NAME=PT SULFINDO ADIUSAHA
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Buat admin pertama:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+node --env-file=.env.local scripts/create-admin.mjs
+# atau isi manual di Dashboard Supabase → Authentication → Add user,
+# lalu set role=admin di tabel public.profiles
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+5. Jalankan:
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Buka http://localhost:3000.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Struktur Folder
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+supabase/schema.sql          # skema database + RLS + seed
+src/lib/                     # types, constants, actions, supabase clients
+src/lib/actions.ts           # server actions (CRUD, transaksi, user)
+src/components/              # UI komponen (shell, QR, form, dsb.)
+src/app/(app)/               # halaman utama (dashboard, inventory, dll.)
+src/app/login/               # halaman login
+src/proxy.ts                 # proteksi rute & refresh session (middleware Next 16)
+scripts/create-admin.mjs     # membuat admin awal
+```
 
-## Deploy on Vercel
+## Arsitektur
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+Smartphone/PC → Vercel (Next.js) → Supabase (PostgreSQL, Auth, Storage, RLS)
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Reads** memakai Supabase client dengan session user (RLS aktif).
+- **Writes / transaksi penting** dilakukan via Server Actions dengan service-role key
+  di sisi server (tidak pernah dikirim ke browser).
+- Nomor transaksi dibuat atomik di database via `generate_transaction_number()`.
+
+## Deployment ke Vercel
+
+1. Push repository ke GitHub.
+2. Import project di Vercel (framework: Next.js).
+3. Set environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_COMPANY_NAME`.
+4. Deploy. Akses https://saumek.vercel.app.
