@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { QrScanner } from "@/components/qr-scanner";
 import { Button, Card, ErrorMessage, Input, Spinner } from "@/components/ui";
@@ -19,6 +20,7 @@ interface ScanResult {
 }
 
 export function ScanClient({ initialCode }: { initialCode?: string }) {
+  const router = useRouter();
   const [result, setResult] = useState<ScanResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +35,53 @@ export function ScanClient({ initialCode }: { initialCode?: string }) {
     setScanned(true);
 
     const supabase = createClient();
+
+    // Universal QR: EMP- / JOB- / AST- prefixes route to their modules
+    if (code.startsWith("EMP-")) {
+      const { data: emp } = await supabase
+        .from("employees")
+        .select("id")
+        .or(`employee_id.eq.${code},qr_code.eq.${code}`)
+        .maybeSingle();
+      setLoading(false);
+      if (emp) {
+        router.push(`/people/${emp.id}`);
+      } else {
+        setError(`Personel dengan kode "${code}" tidak ditemukan.`);
+      }
+      return;
+    }
+
+    if (code.startsWith("JOB-")) {
+      const { data: job } = await supabase
+        .from("jobs")
+        .select("id")
+        .eq("job_number", code)
+        .maybeSingle();
+      setLoading(false);
+      if (job) {
+        router.push(`/jobs/${job.id}`);
+      } else {
+        setError(`Job dengan nomor "${code}" tidak ditemukan.`);
+      }
+      return;
+    }
+
+    if (code.startsWith("AST-")) {
+      const { data: unit } = await supabase
+        .from("item_units")
+        .select("item_id")
+        .or(`unit_code.eq.${code},qr_code.eq.${code}`)
+        .maybeSingle();
+      setLoading(false);
+      if (unit) {
+        router.push(`/inventory/${unit.item_id}`);
+      } else {
+        setError(`Asset dengan kode "${code}" tidak ditemukan.`);
+      }
+      return;
+    }
+
     const { data: item, error: itemError } = await supabase
       .from("items")
       .select("*, categories(name), locations(name)")

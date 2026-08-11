@@ -2,9 +2,9 @@ import Link from "next/link";
 import { requireProfile } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardHeader, StatCard, SectionTitle, Button } from "@/components/ui";
-import { ItemStatusBadge, BorrowingStatusBadge } from "@/components/status-badge";
+import { ItemStatusBadge, BorrowingStatusBadge, JobStatusBadge } from "@/components/status-badge";
 import { formatDateTime, daysOverdue, todayISO } from "@/lib/constants";
-import type { BorrowingStatus } from "@/lib/types";
+import type { BorrowingStatus, JobStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [{ data: itemsRaw }, { data: borrowingsRaw }, { data: returnsTodayRaw }] =
+  const [{ data: itemsRaw }, { data: borrowingsRaw }, { data: returnsTodayRaw }, { data: jobsRaw }, { data: employeesRaw }] =
     await Promise.all([
       supabase.from("items").select("id, status"),
       supabase
@@ -43,11 +43,15 @@ export default async function DashboardPage() {
         .select("id")
         .gte("return_date", todayISO() + "T00:00:00")
         .lte("return_date", todayISO() + "T23:59:59"),
+      supabase.from("jobs").select("id, job_number, title, status, progress, planned_start"),
+      supabase.from("employees").select("id, employment_status"),
     ]);
 
   const items = (itemsRaw ?? []) as { id: string; status: string }[];
   const borrowings = (borrowingsRaw ?? []) as unknown as BorrowingRow[];
   const returnsToday = (returnsTodayRaw ?? []) as { id: string }[];
+  const jobs = (jobsRaw ?? []) as unknown as { id: string; job_number: string; title: string; status: JobStatus; progress: number; planned_start: string | null }[];
+  const employees = (employeesRaw ?? []) as { id: string; employment_status: string }[];
 
   const count = (s: string) => items.filter((i) => i.status === s).length;
 
@@ -77,6 +81,11 @@ export default async function DashboardPage() {
   const topItems = [...itemCountMap.values()].sort((a, b) => b.count - a.count).slice(0, 5);
 
   const isAdmin = profile.role === "admin";
+
+  const jobCount = (s: string) => jobs.filter((j) => j.status === s).length;
+  const activeEmployeesCount = employees.filter((e) => e.employment_status !== "INACTIVE").length;
+  const activeJobs = jobs.filter((j) => ["PLANNED", "READY", "IN_PROGRESS", "PENDING"].includes(j.status));
+  const showJobs = ["admin", "supervisor", "foreman", "management"].includes(profile.role);
 
   return (
     <div className="space-y-6">
@@ -169,6 +178,52 @@ export default async function DashboardPage() {
               </Card>
             )}
           </div>
+        </div>
+      )}
+
+      {showJobs && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <StatCard label="Total Job" value={jobs.length} />
+          <StatCard label="Direncanakan" value={jobCount("PLANNED")} color="text-sky-600" />
+          <StatCard label="Siap" value={jobCount("READY")} color="text-teal-600" />
+          <StatCard label="Berjalan" value={jobCount("IN_PROGRESS")} color="text-amber-600" />
+          <StatCard label="Selesai" value={jobCount("COMPLETED")} color="text-emerald-600" />
+          <StatCard label="Personel Aktif" value={activeEmployeesCount} color="text-blue-600" />
+        </div>
+      )}
+
+      {showJobs && (
+        <div>
+          <SectionTitle
+            title="Pekerjaan Aktif"
+            action={
+              <Link href="/jobs" className="text-xs font-medium text-blue-600 hover:underline">
+                Lihat semua
+              </Link>
+            }
+          />
+          <Card className="divide-y divide-zinc-100">
+            {activeJobs.length === 0 ? (
+              <p className="px-4 py-6 text-center text-sm text-zinc-500">Belum ada pekerjaan aktif.</p>
+            ) : (
+              activeJobs.slice(0, 5).map((j) => (
+                <Link
+                  key={j.id}
+                  href={`/jobs/${j.id}`}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-zinc-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-zinc-900">{j.title}</p>
+                    <p className="text-xs text-zinc-500">{j.job_number}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-600">{j.progress}%</span>
+                    <JobStatusBadge status={j.status} />
+                  </div>
+                </Link>
+              ))
+            )}
+          </Card>
         </div>
       )}
 

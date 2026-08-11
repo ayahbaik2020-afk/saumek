@@ -1,0 +1,18 @@
+import { requireProfile } from "@/lib/db";
+import { createClient } from "@/lib/supabase/server";
+import { JobList } from "@/components/job-list";
+import type { Job } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+export default async function JobsPage() {
+  await requireProfile();
+  const supabase = await createClient();
+
+  const { data: jobs = [] } = await supabase
+    .from("jobs")
+    .select("*, work_orders(wo_number), pic(name, employee_id), supervisor(name, employee_id)")
+    .order("created_at", { ascending: false });
+
+  return <JobList jobs={(jobs as unknown) as Job[]} />;
+}

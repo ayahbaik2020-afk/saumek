@@ -15,8 +15,15 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "🏠", roles: ["admin", "mechanic", "supervisor"] },
-  { href: "/scan", label: "Scan QR", icon: "📷", roles: ["admin", "mechanic", "supervisor"] },
+  { href: "/dashboard", label: "Dashboard", icon: "🏠", roles: ["admin", "mechanic", "supervisor", "foreman", "management"] },
+  { href: "/scan", label: "Scan QR", icon: "📷", roles: ["admin", "mechanic", "supervisor", "foreman"] },
+  { href: "/jobs", label: "Pekerjaan (Job)", icon: "🔧", roles: ["admin", "mechanic", "supervisor", "foreman", "management"] },
+  { href: "/jobs/calendar", label: "Kalender Job", icon: "📅", roles: ["admin", "supervisor", "foreman", "management"] },
+  { href: "/work-orders", label: "Work Order", icon: "📋", roles: ["admin", "supervisor", "foreman"] },
+  { href: "/people", label: "Personel", icon: "👷", roles: ["admin", "supervisor", "foreman"] },
+  { href: "/skills", label: "Skills", icon: "🎓", roles: ["admin", "supervisor"] },
+  { href: "/certificates", label: "Sertifikat", icon: "📜", roles: ["admin", "supervisor", "management"] },
+  { href: "/violations", label: "Pelanggaran", icon: "🚨", roles: ["admin", "supervisor"] },
   { href: "/inventory", label: "Daftar Barang", icon: "📦", roles: ["admin", "mechanic", "supervisor"] },
   { href: "/borrow", label: "Peminjaman", icon: "🔄", roles: ["admin", "mechanic"] },
   { href: "/returns", label: "Pengembalian", icon: "↩️", roles: ["admin", "mechanic"] },
@@ -67,7 +74,7 @@ export function AppShell({
           </div>
           <div>
             <p className="text-sm font-bold text-zinc-900">SAUMEK</p>
-            <p className="text-xs text-zinc-500">Inventory & Peminjaman</p>
+            <p className="text-xs text-zinc-500">Mechanical Ops & Inventory</p>
           </div>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">

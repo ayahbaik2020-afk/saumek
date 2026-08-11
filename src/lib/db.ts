@@ -35,6 +35,23 @@ export async function requireAdmin(): Promise<Profile> {
   return profile;
 }
 
+export async function requireSupervisor(): Promise<Profile> {
+  const profile = await requireProfile();
+  if (profile.role !== "admin" && profile.role !== "supervisor") redirect("/dashboard");
+  return profile;
+}
+
+export async function requireManager(): Promise<Profile> {
+  const profile = await requireProfile();
+  if (
+    profile.role !== "admin" &&
+    profile.role !== "supervisor" &&
+    profile.role !== "foreman"
+  )
+    redirect("/dashboard");
+  return profile;
+}
+
 export async function logAudit(input: {
   userId?: string | null;
   userName?: string | null;
