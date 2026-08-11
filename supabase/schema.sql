@@ -520,7 +520,9 @@ $$;
 
 -- ---------- HELPERS ----------
 
-create or replace function public.current_role()
+drop function if exists public.current_role();
+
+create or replace function public.app_role()
 returns text
 language sql
 security definer
@@ -537,7 +539,7 @@ security definer
 set search_path = public
 stable
 as $$
-  select coalesce(current_role() = 'admin', false);
+  select coalesce(app_role() = 'admin', false);
 $$;
 
 create or replace function public.is_supervisor()
@@ -547,7 +549,7 @@ security definer
 set search_path = public
 stable
 as $$
-  select coalesce(current_role() in ('admin','supervisor'), false);
+  select coalesce(app_role() in ('admin','supervisor'), false);
 $$;
 
 create or replace function public.is_manager()
@@ -557,7 +559,7 @@ security definer
 set search_path = public
 stable
 as $$
-  select coalesce(current_role() in ('admin','supervisor','foreman'), false);
+  select coalesce(app_role() in ('admin','supervisor','foreman'), false);
 $$;
 
 create or replace function public.set_updated_at()
