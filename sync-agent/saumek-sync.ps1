@@ -334,7 +334,32 @@ function Read-Config {
     }
 
     if (Test-Path -LiteralPath $ConfigPath) {
-        return Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
+        $cfg = Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
+        # Kalau config sudah lengkap (ada password + supabase), langsung pakai tanpa setup
+        $hasAuth = ($cfg.sqlAuthMode -eq 'windows') -or ($cfg.sqlPasswordEnc -and [string]$cfg.sqlPasswordEnc -ne '')
+        $hasSupabase = $cfg.supabaseKey -and [string]$cfg.supabaseKey -ne ''
+        if ($hasAuth -and $hasSupabase) { return $cfg }
+    }
+
+    # config tidak ada atau belum lengkap — cek apakah ada di folder Downloads
+    $altDirs = @(
+        (Join-Path $env:USERPROFILE 'Downloads\saumek-sync-agent'),
+        (Join-Path $env:USERPROFILE 'Downloads\saumek-sync-agent (1)'),
+        'D:\share\Downloads\saumek-sync-agent'
+    )
+    foreach ($alt in $altDirs) {
+        $altCfg = Join-Path $alt 'config.json'
+        if (Test-Path -LiteralPath $altCfg) {
+            $cfg = Get-Content -LiteralPath $altCfg -Raw | ConvertFrom-Json
+            $hasAuth = ($cfg.sqlAuthMode -eq 'windows') -or ($cfg.sqlPasswordEnc -and [string]$cfg.sqlPasswordEnc -ne '')
+            $hasSupabase = $cfg.supabaseKey -and [string]$cfg.supabaseKey -ne ''
+            if ($hasAuth -and $hasSupabase) {
+                Write-Warn "Memakai config dari: $altCfg"
+                # Salin ke folder script supaya next run langsung ketemu
+                $cfg | ConvertTo-Json | Set-Content -LiteralPath $ConfigPath -Encoding UTF8
+                return $cfg
+            }
+        }
     }
 
     return Initialize-Config
