@@ -306,15 +306,19 @@ export function resolveSimipAttachmentInfo(ref: SimipWoRef): SimipAttachmentInfo
 
   const folderPath = buildSimipAttachmentFolderPath();
   const synced = extractSimipDocumentPaths(ref.raw_data ?? null, wonum);
-  const defaults = buildSimipDefaultDocumentCandidates(wonum);
 
   const documentPaths: string[] = [];
-  for (const p of [...synced, ...defaults]) {
+  for (const p of synced) {
     if (!documentPaths.includes(p)) documentPaths.push(p);
   }
 
-  const viewables = extractSimipViewableAttachments(wonum, documentPaths);
-  const primaryPath = synced[0] ?? defaults[0];
+  /**
+   * IMPORTANT:
+   * Untuk mencegah WO tanpa file tampil seolah punya lampiran,
+   * daftar viewables diisi dari API disk scan (server-side), bukan dari kandidat path.
+   */
+  const viewables: ViewableAttachment[] = [];
+  const primaryPath = synced[0] ?? buildSimipAttachmentFilePath(wonum);
 
   return { wonum, folderPath, documentPaths, primaryPath, viewables };
 }

@@ -50,6 +50,12 @@ function normalizeDiskPath(p: string) {
   return p.trim().replace(/\//g, "\\");
 }
 
+function isStrictWoAttachmentName(name: string, wonum: string) {
+  const escaped = wonum.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`^${escaped}_WR\\.[A-Za-z0-9]+$`, "i");
+  return re.test(name);
+}
+
 /** Daftar file lampiran WO dari drive N: (hanya baca, tidak upload). */
 export function listWoAttachmentFilesOnDisk(
   wonum: string,
@@ -74,7 +80,7 @@ export function listWoAttachmentFilesOnDisk(
     const name = path.basename(normalized);
     const ext = path.extname(name).toLowerCase();
     if (!allowedExts.has(ext)) return;
-    if (!name.toUpperCase().startsWith(wonumUpper)) return;
+    if (!isStrictWoAttachmentName(name, wonumUpper)) return;
 
     found.set(name, normalized);
   };
