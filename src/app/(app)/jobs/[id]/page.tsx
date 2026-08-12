@@ -25,7 +25,9 @@ export default async function JobDetailPage({ params }: PageProps<"/jobs/[id]">)
 
   const { data: job } = await supabase
     .from("jobs")
-    .select("*, work_orders(wo_number), pic(name, employee_id), supervisor(name, employee_id)")
+    .select(
+      "*, work_orders(wo_number), pic:employees!jobs_pic_id_fkey(name, employee_id), supervisor:employees!jobs_supervisor_id_fkey(name, employee_id)"
+    )
     .eq("id", id)
     .maybeSingle();
   if (!job) notFound();
