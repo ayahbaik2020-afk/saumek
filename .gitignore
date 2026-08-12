@@ -50,3 +50,6 @@ next-env.d.ts
 
 # MIPRO/SAUSIMIP application files (sensitive, tidak ikut commit)
 /simip/
+
+# sync agent local config (secrets)
+/sync-agent/config.json
