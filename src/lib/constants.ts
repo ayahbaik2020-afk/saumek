@@ -15,31 +15,30 @@ import type {
   PermitType,
   PermitStatus,
 } from "@/lib/types";
+import type { Tone } from "@/components/ui";
 
-export const ITEM_STATUS: Record<ItemStatus, { label: string; color: string }> = {
-  AVAILABLE: { label: "Available", color: "bg-emerald-100 text-emerald-700" },
-  BORROWED: { label: "Dipinjam", color: "bg-amber-100 text-amber-700" },
-  MAINTENANCE: { label: "Maintenance", color: "bg-violet-100 text-violet-700" },
-  DAMAGED: { label: "Rusak", color: "bg-rose-100 text-rose-700" },
-  LOST: { label: "Hilang", color: "bg-zinc-200 text-zinc-700" },
-  INACTIVE: { label: "Tidak Aktif", color: "bg-zinc-100 text-zinc-500" },
-  RESERVED: { label: "Reserved", color: "bg-sky-100 text-sky-700" },
+// Status color meaning (spec section 4):
+// success=green (valid/available/completed), info=blue (in progress),
+// warning=amber (pending/expiring), danger=red (error/critical), neutral=gray (inactive)
+
+export const ITEM_STATUS: Record<ItemStatus, { label: string; tone: Tone }> = {
+  AVAILABLE: { label: "Available", tone: "success" },
+  BORROWED: { label: "Dipinjam", tone: "warning" },
+  MAINTENANCE: { label: "Maintenance", tone: "info" },
+  DAMAGED: { label: "Rusak", tone: "danger" },
+  LOST: { label: "Hilang", tone: "danger" },
+  INACTIVE: { label: "Tidak Aktif", tone: "neutral" },
+  RESERVED: { label: "Reserved", tone: "info" },
 };
 
-export const BORROWING_STATUS: Record<
-  BorrowingStatus,
-  { label: string; color: string }
-> = {
-  PENDING: { label: "Pending", color: "bg-sky-100 text-sky-700" },
-  APPROVED: { label: "Disetujui", color: "bg-teal-100 text-teal-700" },
-  BORROWED: { label: "Dipinjam", color: "bg-amber-100 text-amber-700" },
-  PARTIALLY_RETURNED: {
-    label: "Sebagian Dikembalikan",
-    color: "bg-blue-100 text-blue-700",
-  },
-  RETURNED: { label: "Selesai", color: "bg-emerald-100 text-emerald-700" },
-  OVERDUE: { label: "Terlambat", color: "bg-rose-100 text-rose-700" },
-  CANCELLED: { label: "Dibatalkan", color: "bg-zinc-100 text-zinc-500" },
+export const BORROWING_STATUS: Record<BorrowingStatus, { label: string; tone: Tone }> = {
+  PENDING: { label: "Pending", tone: "warning" },
+  APPROVED: { label: "Disetujui", tone: "info" },
+  BORROWED: { label: "Dipinjam", tone: "warning" },
+  PARTIALLY_RETURNED: { label: "Sebagian Dikembalikan", tone: "info" },
+  RETURNED: { label: "Selesai", tone: "success" },
+  OVERDUE: { label: "Terlambat", tone: "danger" },
+  CANCELLED: { label: "Dibatalkan", tone: "neutral" },
 };
 
 export const ITEM_CONDITION: Record<ItemCondition, string> = {
@@ -57,17 +56,17 @@ export const SKILL_LEVEL: Record<SkillLevel, string> = {
   EXPERT: "Expert",
 };
 
-export const CERT_STATUS: Record<CertStatus, { label: string; color: string }> = {
-  VALID: { label: "Valid", color: "bg-emerald-100 text-emerald-700" },
-  EXPIRING_SOON: { label: "Segera Habis", color: "bg-amber-100 text-amber-700" },
-  EXPIRED: { label: "Expired", color: "bg-rose-100 text-rose-700" },
+export const CERT_STATUS: Record<CertStatus, { label: string; tone: Tone }> = {
+  VALID: { label: "Valid", tone: "success" },
+  EXPIRING_SOON: { label: "Segera Habis", tone: "warning" },
+  EXPIRED: { label: "Expired", tone: "danger" },
 };
 
-export const EMPLOYMENT_STATUS: Record<EmploymentStatus, { label: string; color: string }> = {
-  ACTIVE: { label: "Aktif", color: "bg-emerald-100 text-emerald-700" },
-  INACTIVE: { label: "Tidak Aktif", color: "bg-zinc-100 text-zinc-500" },
-  CONTRACT: { label: "Kontrak", color: "bg-sky-100 text-sky-700" },
-  PROBATION: { label: "Probation", color: "bg-amber-100 text-amber-700" },
+export const EMPLOYMENT_STATUS: Record<EmploymentStatus, { label: string; tone: Tone }> = {
+  ACTIVE: { label: "Aktif", tone: "success" },
+  INACTIVE: { label: "Tidak Aktif", tone: "neutral" },
+  CONTRACT: { label: "Kontrak", tone: "info" },
+  PROBATION: { label: "Probation", tone: "warning" },
 };
 
 export const VIOLATION_CATEGORY: Record<ViolationCategory, string> = {
@@ -79,49 +78,49 @@ export const VIOLATION_CATEGORY: Record<ViolationCategory, string> = {
   OTHER: "Lainnya",
 };
 
-export const VIOLATION_SEVERITY: Record<ViolationSeverity, { label: string; color: string }> = {
-  MINOR: { label: "Ringan", color: "bg-sky-100 text-sky-700" },
-  MAJOR: { label: "Sedang", color: "bg-amber-100 text-amber-700" },
-  CRITICAL: { label: "Berat", color: "bg-rose-100 text-rose-700" },
+export const VIOLATION_SEVERITY: Record<ViolationSeverity, { label: string; tone: Tone }> = {
+  MINOR: { label: "Ringan", tone: "info" },
+  MAJOR: { label: "Sedang", tone: "warning" },
+  CRITICAL: { label: "Berat", tone: "danger" },
 };
 
-export const DEV_STATUS: Record<DevStatus, { label: string; color: string }> = {
-  PLANNED: { label: "Direncanakan", color: "bg-sky-100 text-sky-700" },
-  IN_PROGRESS: { label: "Berjalan", color: "bg-amber-100 text-amber-700" },
-  COMPLETED: { label: "Selesai", color: "bg-emerald-100 text-emerald-700" },
-  CANCELLED: { label: "Dibatalkan", color: "bg-zinc-100 text-zinc-500" },
+export const DEV_STATUS: Record<DevStatus, { label: string; tone: Tone }> = {
+  PLANNED: { label: "Direncanakan", tone: "info" },
+  IN_PROGRESS: { label: "Berjalan", tone: "warning" },
+  COMPLETED: { label: "Selesai", tone: "success" },
+  CANCELLED: { label: "Dibatalkan", tone: "neutral" },
 };
 
-export const PRIORITY: Record<Priority, { label: string; color: string }> = {
-  LOW: { label: "Rendah", color: "bg-zinc-100 text-zinc-600" },
-  NORMAL: { label: "Normal", color: "bg-sky-100 text-sky-700" },
-  HIGH: { label: "Tinggi", color: "bg-amber-100 text-amber-700" },
-  URGENT: { label: "Urgent", color: "bg-rose-100 text-rose-700" },
+export const PRIORITY: Record<Priority, { label: string; tone: Tone }> = {
+  LOW: { label: "Rendah", tone: "neutral" },
+  NORMAL: { label: "Normal", tone: "info" },
+  HIGH: { label: "Tinggi", tone: "warning" },
+  URGENT: { label: "Urgent", tone: "danger" },
 };
 
-export const WO_STATUS: Record<WoStatus, { label: string; color: string }> = {
-  OPEN: { label: "Open", color: "bg-sky-100 text-sky-700" },
-  PLANNED: { label: "Direncanakan", color: "bg-blue-100 text-blue-700" },
-  IN_PROGRESS: { label: "Berjalan", color: "bg-amber-100 text-amber-700" },
-  COMPLETED: { label: "Selesai", color: "bg-emerald-100 text-emerald-700" },
-  CANCELLED: { label: "Dibatalkan", color: "bg-zinc-100 text-zinc-500" },
+export const WO_STATUS: Record<WoStatus, { label: string; tone: Tone }> = {
+  OPEN: { label: "Open", tone: "info" },
+  PLANNED: { label: "Direncanakan", tone: "info" },
+  IN_PROGRESS: { label: "Berjalan", tone: "warning" },
+  COMPLETED: { label: "Selesai", tone: "success" },
+  CANCELLED: { label: "Dibatalkan", tone: "neutral" },
 };
 
-export const JOB_STATUS: Record<JobStatus, { label: string; color: string }> = {
-  PLANNED: { label: "Direncanakan", color: "bg-sky-100 text-sky-700" },
-  READY: { label: "Siap", color: "bg-teal-100 text-teal-700" },
-  IN_PROGRESS: { label: "Berjalan", color: "bg-amber-100 text-amber-700" },
-  PENDING: { label: "Tertunda", color: "bg-orange-100 text-orange-700" },
-  COMPLETED: { label: "Selesai", color: "bg-emerald-100 text-emerald-700" },
-  CANCELLED: { label: "Dibatalkan", color: "bg-zinc-100 text-zinc-500" },
+export const JOB_STATUS: Record<JobStatus, { label: string; tone: Tone }> = {
+  PLANNED: { label: "Direncanakan", tone: "info" },
+  READY: { label: "Siap", tone: "success" },
+  IN_PROGRESS: { label: "Berjalan", tone: "warning" },
+  PENDING: { label: "Tertunda", tone: "warning" },
+  COMPLETED: { label: "Selesai", tone: "success" },
+  CANCELLED: { label: "Dibatalkan", tone: "neutral" },
 };
 
-export const JOB_TOOL_STATUS: Record<JobToolStatus, { label: string; color: string }> = {
-  REQUIRED: { label: "Dibutuhkan", color: "bg-zinc-100 text-zinc-600" },
-  RESERVED: { label: "Reserved", color: "bg-sky-100 text-sky-700" },
-  ISSUED: { label: "Diserahkan", color: "bg-blue-100 text-blue-700" },
-  RETURNED: { label: "Dikembalikan", color: "bg-emerald-100 text-emerald-700" },
-  CANCELLED: { label: "Dibatalkan", color: "bg-zinc-100 text-zinc-500" },
+export const JOB_TOOL_STATUS: Record<JobToolStatus, { label: string; tone: Tone }> = {
+  REQUIRED: { label: "Dibutuhkan", tone: "neutral" },
+  RESERVED: { label: "Reserved", tone: "info" },
+  ISSUED: { label: "Diserahkan", tone: "warning" },
+  RETURNED: { label: "Dikembalikan", tone: "success" },
+  CANCELLED: { label: "Dibatalkan", tone: "neutral" },
 };
 
 export const PERMIT_TYPE: Record<PermitType, string> = {
@@ -134,12 +133,12 @@ export const PERMIT_TYPE: Record<PermitType, string> = {
   OTHER: "Lainnya",
 };
 
-export const PERMIT_STATUS: Record<PermitStatus, { label: string; color: string }> = {
-  PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700" },
-  APPROVED: { label: "Disetujui", color: "bg-emerald-100 text-emerald-700" },
-  EXPIRED: { label: "Expired", color: "bg-rose-100 text-rose-700" },
-  REJECTED: { label: "Ditolak", color: "bg-rose-100 text-rose-700" },
-  NOT_REQUIRED: { label: "Tidak Diperlukan", color: "bg-zinc-100 text-zinc-500" },
+export const PERMIT_STATUS: Record<PermitStatus, { label: string; tone: Tone }> = {
+  PENDING: { label: "Pending", tone: "warning" },
+  APPROVED: { label: "Disetujui", tone: "success" },
+  EXPIRED: { label: "Expired", tone: "danger" },
+  REJECTED: { label: "Ditolak", tone: "danger" },
+  NOT_REQUIRED: { label: "Tidak Diperlukan", tone: "neutral" },
 };
 
 export const DEFAULT_JOB_CHECKLIST = [

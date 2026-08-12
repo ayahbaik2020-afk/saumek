@@ -4,12 +4,13 @@ import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card, CardHeader, ErrorMessage, Input, Select, Textarea } from "@/components/ui";
-import { JobStatusBadge, PriorityBadge, JobToolStatusBadge, PermitStatusBadge } from "@/components/status-badge";
+import { JobStatusBadge, PriorityBadge, JobToolStatusBadge, PermitStatusBadge, BorrowingStatusBadge } from "@/components/status-badge";
 import {
   updateJobStatus,
   updateJobProgress,
   assignManpower,
   removeManpower,
+  toggleManpowerPic,
   addJobRequirement,
   removeJobRequirement,
   addJobTool,
@@ -23,7 +24,7 @@ import {
   addDailyReport,
   type JobState,
 } from "@/lib/job-actions";
-import { formatDate, PERMIT_TYPE, SKILL_LEVEL } from "@/lib/constants";
+import { formatDate, formatDateTime, PERMIT_TYPE, SKILL_LEVEL } from "@/lib/constants";
 import type {
   Job,
   Employee,
@@ -39,6 +40,7 @@ import type {
   JobStatus,
   JobToolStatus,
   PermitStatus,
+  Borrowing,
 } from "@/lib/types";
 
 const STATUS_FLOW: Partial<Record<JobStatus, JobStatus[]>> = {
@@ -56,6 +58,7 @@ export function JobDetail({
   manpower,
   requirements,
   tools,
+  borrowings,
   permits,
   checklist,
   progress,
@@ -69,6 +72,7 @@ export function JobDetail({
   manpower: JobManpower[];
   requirements: JobRequirement[];
   tools: JobTool[];
+  borrowings: Borrowing[];
   permits: JobPermit[];
   checklist: JobChecklist[];
   progress: JobProgress[];
@@ -92,6 +96,16 @@ export function JobDetail({
   const activeEmployees = employees.filter((e) => e.employment_status !== "INACTIVE");
   const assignedIds = new Set(manpower.map((m) => m.employee_id));
   const availableEmployees = activeEmployees.filter((e) => !assignedIds.has(e.id));
+  const picNames = manpower
+    .filter((m) => m.is_pic)
+    .map((m) => m.employees?.name)
+    .filter(Boolean) as string[];
+  const displayPics =
+    picNames.length > 0
+      ? picNames
+      : job.pic?.name
+        ? [job.pic.name]
+        : [];
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true);
@@ -115,9 +129,19 @@ export function JobDetail({
             </div>
             <p className="mt-0.5 text-sm text-zinc-500">
               {job.job_number}
-              {job.work_orders ? (
+              {job.external_work_orders ? (
                 <>
-                  {" · "}<Link href={`/work-orders`} className="text-blue-600 hover:underline">WO {job.work_orders.wo_number}</Link>
+                  {" · "}
+                  <Link href="/simip-wo" className="text-[var(--color-primary)] hover:underline">
+                    SIMIP {job.external_work_orders.wo_number}
+                  </Link>
+                </>
+              ) : job.work_orders ? (
+                <>
+                  {" · "}
+                  <Link href="/work-orders" className="text-[var(--color-primary)] hover:underline">
+                    WO {job.work_orders.wo_number}
+                  </Link>
                 </>
               ) : null}
               {" · "}{[job.plant, job.area, job.location].filter(Boolean).join(" / ") || "-"}
@@ -133,9 +157,21 @@ export function JobDetail({
         </div>
 
         <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-          <div>
-            <dt className="text-xs text-zinc-400">PIC</dt>
-            <dd className="font-medium text-zinc-800">{job.pic?.name ?? "-"}</dd>
+          <div className="sm:col-span-2">
+            <dt className="text-xs text-zinc-400">PIC ({displayPics.length || 0})</dt>
+            <dd className="font-medium text-zinc-800">
+              {displayPics.length === 0 ? (
+                "-"
+              ) : (
+                <span className="flex flex-wrap gap-1.5">
+                  {displayPics.map((name) => (
+                    <Badge key={name} className="bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                      {name}
+                    </Badge>
+                  ))}
+                </span>
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-zinc-400">Supervisor</dt>
@@ -167,31 +203,44 @@ export function JobDetail({
             value={progressValue}
             onChange={(e) => setProgressValue(Number(e.target.value))}
             onPointerUp={() => run(() => updateJobProgress(job.id, progressValue))}
-            className="w-full accent-blue-600"
+            className="w-full accent-[var(--color-primary)]"
           />
         </div>
       </Card>
 
       {/* Manpower */}
       <Card>
-        <CardHeader title={`Manpower (${manpower.length})`} />
+        <CardHeader
+          title={`Manpower (${manpower.length})`}
+          subtitle="Centang PIC pada satu atau lebih personel."
+        />
         <div className="divide-y divide-zinc-100">
           {manpower.length === 0 && <p className="px-4 py-5 text-center text-sm text-zinc-500">Belum ada manpower.</p>}
           {manpower.map((m) => (
-            <div key={m.id} className="flex items-center justify-between px-4 py-3">
-              <div>
+            <div key={m.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-zinc-900">
                   {m.employees?.name ?? "-"}
-                  {m.is_pic && <Badge className="ml-2 bg-blue-50 text-blue-700">PIC</Badge>}
+                  {m.is_pic && <Badge className="ml-2 bg-[var(--color-primary-soft)] text-[var(--color-primary)]">PIC</Badge>}
                 </p>
                 <p className="text-xs text-zinc-500">
                   {m.employees?.employee_id ?? ""}{m.role ? ` · ${m.role}` : ""}
                 </p>
               </div>
               {canManage && (
-                <Button variant="ghost" className="text-xs text-rose-600" onClick={() => run(() => removeManpower(m.id, job.id))}>
-                  Hapus
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    variant={m.is_pic ? "secondary" : "ghost"}
+                    className="px-2 py-1 text-xs"
+                    disabled={busy}
+                    onClick={() => run(() => toggleManpowerPic(m.id, job.id, !m.is_pic))}
+                  >
+                    {m.is_pic ? "Lepas PIC" : "Jadikan PIC"}
+                  </Button>
+                  <Button variant="ghost" className="text-xs text-rose-600" onClick={() => run(() => removeManpower(m.id, job.id))}>
+                    Hapus
+                  </Button>
+                </div>
               )}
             </div>
           ))}
@@ -269,9 +318,18 @@ export function JobDetail({
 
       {/* Tools */}
       <Card>
-        <CardHeader title={`Tools / Inventory (${tools.length})`} />
+        <CardHeader
+          title={`Tools / Inventory (${tools.length})`}
+          action={
+            job.status !== "COMPLETED" && job.status !== "CANCELLED" ? (
+              <Button href={`/borrow/new?job=${job.id}`} variant="secondary" className="px-3 py-1.5 text-xs">
+                Pinjam untuk job ini
+              </Button>
+            ) : undefined
+          }
+        />
         <div className="divide-y divide-zinc-100">
-          {tools.length === 0 && <p className="px-4 py-5 text-center text-sm text-zinc-500">Belum ada tool.</p>}
+          {tools.length === 0 && <p className="px-4 py-5 text-center text-sm text-zinc-500">Belum ada tool. Pinjam barang atau tambah rencana tool.</p>}
           {tools.map((t) => (
             <div key={t.id} className="flex items-center justify-between px-4 py-3">
               <div>
@@ -319,6 +377,47 @@ export function JobDetail({
             </div>
           </form>
         )}
+      </Card>
+
+      {/* Borrowings linked to this job */}
+      <Card>
+        <CardHeader title={`Peminjaman Tool (${borrowings.length})`} />
+        <div className="divide-y divide-zinc-100">
+          {borrowings.length === 0 && (
+            <p className="px-4 py-5 text-center text-sm text-zinc-500">
+              Belum ada peminjaman terkait job ini.
+            </p>
+          )}
+          {borrowings.map((b) => (
+            <div key={b.id} className="px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium text-zinc-900">
+                    {b.transaction_number}
+                    <span className="ml-2 font-normal text-zinc-500">
+                      {b.profiles?.name ?? "—"}
+                    </span>
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {formatDateTime(b.borrow_date)}
+                    {b.purpose ? ` · ${b.purpose}` : ""}
+                  </p>
+                </div>
+                <BorrowingStatusBadge status={b.status} />
+              </div>
+              {b.borrowing_items && b.borrowing_items.length > 0 && (
+                <ul className="mt-2 space-y-0.5 text-xs text-zinc-600">
+                  {b.borrowing_items.map((line) => (
+                    <li key={line.id}>
+                      {line.items?.item_code ?? "?"} · {line.items?.name ?? "—"} × {line.quantity}
+                      {line.returned_quantity > 0 ? ` (kembali ${line.returned_quantity})` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
       </Card>
 
       {/* Permits */}
@@ -393,7 +492,7 @@ export function JobDetail({
                 type="checkbox"
                 checked={c.is_checked}
                 onChange={(e) => run(() => toggleChecklist(c.id, e.target.checked, job.id))}
-                className="h-4 w-4 accent-blue-600"
+                className="h-4 w-4 accent-[var(--color-primary)]"
               />
               <span className={`text-sm ${c.is_checked ? "text-zinc-400 line-through" : "text-zinc-900"}`}>
                 {c.item}

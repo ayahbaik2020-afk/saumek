@@ -453,6 +453,15 @@ create table if not exists public.external_work_orders (
   unique (source_system, wo_number)
 );
 
+-- Link: jobs yang dibuat dari WO SIMIP menunjuk ke baris di atas.
+-- Ditambahkan setelah external_work_orders agar referensi FK valid saat fresh run.
+alter table public.jobs add column if not exists external_wo_id uuid references public.external_work_orders(id);
+create unique index if not exists uq_jobs_external_wo_id on public.jobs (external_wo_id) where external_wo_id is not null;
+
+-- Link pinjam ke job (tool usage: siapa pakai untuk pekerjaan apa)
+alter table public.borrowings add column if not exists job_id uuid references public.jobs(id);
+create index if not exists idx_borrowings_job on public.borrowings (job_id);
+
 create table if not exists public.wo_sync_logs (
   id uuid primary key default gen_random_uuid(),
   started_at timestamptz not null default now(),

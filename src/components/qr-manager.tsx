@@ -62,16 +62,16 @@ export function QrManager({ initial }: { initial: Item[] }) {
             key={item.id}
             type="button"
             onClick={() => toggle(item.id)}
-            className={`rounded-xl border p-3 text-left transition-colors ${
+            className={`rounded-xl border p-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)] active:scale-[0.98] ${
               selected.has(item.id)
-                ? "border-blue-500 bg-blue-50"
-                : "border-zinc-200 bg-white hover:border-zinc-300"
+                ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                : "border-zinc-200 bg-white hover:border-[var(--color-primary)]"
             }`}
           >
             <p className="text-xs font-semibold text-zinc-900">{item.name}</p>
             <p className="text-xs text-zinc-500">{item.item_code}</p>
             {selected.has(item.id) && (
-              <p className="mt-1 text-xs font-medium text-blue-600">✓ Dipilih</p>
+              <p className="mt-1 text-xs font-medium text-[var(--color-primary)]">✓ Dipilih</p>
             )}
           </button>
         ))}

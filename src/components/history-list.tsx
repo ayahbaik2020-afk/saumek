@@ -20,7 +20,7 @@ export function HistoryList() {
       const { data } = await supabase
         .from("borrowings")
         .select(
-          "*, profiles(name), borrowing_items(id, quantity, returned_quantity, items(name, item_code))"
+          "*, profiles(name), jobs(id, job_number, title), borrowing_items(id, item_id, quantity, returned_quantity, items(name, item_code))"
         )
         .order("created_at", { ascending: false })
         .limit(200);
@@ -37,6 +37,8 @@ export function HistoryList() {
       return (
         b.transaction_number.toLowerCase().includes(q) ||
         (b.profiles?.name ?? "").toLowerCase().includes(q) ||
+        (b.jobs?.job_number ?? "").toLowerCase().includes(q) ||
+        (b.jobs?.title ?? "").toLowerCase().includes(q) ||
         b.borrowing_items?.some(
           (l) =>
             (l.items?.name ?? "").toLowerCase().includes(q) ||
@@ -86,6 +88,17 @@ export function HistoryList() {
                 </p>
                 <p className="text-xs text-zinc-500">
                   {b.profiles?.name ?? "-"} · {formatDateTime(b.borrow_date)}
+                  {b.jobs ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/jobs/${b.jobs.id}`}
+                        className="text-[var(--color-primary)] hover:underline"
+                      >
+                        {b.jobs.job_number}
+                      </Link>
+                    </>
+                  ) : null}
                 </p>
               </div>
               <BorrowingStatusBadge status={b.status} />
@@ -98,7 +111,7 @@ export function HistoryList() {
                 >
                   <Link
                     href={`/inventory/${line.item_id}`}
-                    className="text-zinc-700 hover:text-blue-600"
+                    className="text-zinc-700 transition-colors duration-150 ease-out hover:text-[var(--color-primary)]"
                   >
                     {line.items?.name ?? "-"}
                     <span className="text-xs text-zinc-400">

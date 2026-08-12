@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -13,33 +13,53 @@ import {
   Textarea,
 } from "@/components/ui";
 import { createBorrowing, type BorrowState } from "@/lib/borrow-actions";
-import type { Item } from "@/lib/types";
+import type { Item, Job } from "@/lib/types";
 
 interface CartLine {
   item: Item;
   quantity: number;
 }
 
-export function BorrowForm({ initialItemCode }: { initialItemCode?: string }) {
+type JobOption = Pick<Job, "id" | "job_number" | "title" | "area" | "location" | "status">;
+
+export function BorrowForm({
+  initialItemCode,
+  initialJobId,
+}: {
+  initialItemCode?: string;
+  initialJobId?: string;
+}) {
   const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
+  const [jobs, setJobs] = useState<JobOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [jobId, setJobId] = useState(initialJobId ?? "");
+  const [purpose, setPurpose] = useState("");
+  const [locationOfUse, setLocationOfUse] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     (async () => {
-      const { data } = await supabase
-        .from("items")
-        .select("*, categories(name)")
-        .eq("is_active", true)
-        .in("status", ["AVAILABLE"])
-        .order("name");
-      const list = (data ?? []) as Item[];
+      const [itemsRes, jobsRes] = await Promise.all([
+        supabase
+          .from("items")
+          .select("*, categories(name)")
+          .eq("is_active", true)
+          .in("status", ["AVAILABLE"])
+          .order("name"),
+        supabase
+          .from("jobs")
+          .select("id, job_number, title, area, location, status")
+          .not("status", "in", "(COMPLETED,CANCELLED)")
+          .order("planned_start", { ascending: true }),
+      ]);
+      const list = (itemsRes.data ?? []) as Item[];
       setItems(list);
+      setJobs((jobsRes.data ?? []) as JobOption[]);
       if (initialItemCode) {
         const pre = list.find((i) => i.item_code === initialItemCode);
         if (pre) {
@@ -49,6 +69,23 @@ export function BorrowForm({ initialItemCode }: { initialItemCode?: string }) {
       setLoading(false);
     })();
   }, [initialItemCode]);
+
+  const selectedJob = useMemo(
+    () => jobs.find((j) => j.id === jobId) ?? null,
+    [jobs, jobId]
+  );
+
+  useEffect(() => {
+    if (!selectedJob) return;
+    setPurpose((prev) =>
+      prev.trim() ? prev : `Pekerjaan ${selectedJob.job_number}: ${selectedJob.title}`
+    );
+    setLocationOfUse((prev) =>
+      prev.trim()
+        ? prev
+        : [selectedJob.area, selectedJob.location].filter(Boolean).join(" / ")
+    );
+  }, [selectedJob]);
 
   function addToCart(item: Item) {
     if (cart.some((c) => c.item.id === item.id)) return;
@@ -75,6 +112,9 @@ export function BorrowForm({ initialItemCode }: { initialItemCode?: string }) {
       formData.set(`line-item-${line.item.id}`, line.item.id);
       formData.set(`line-qty-${line.item.id}`, String(line.quantity));
     }
+    if (jobId) formData.set("job_id", jobId);
+    formData.set("purpose", purpose);
+    formData.set("location_of_use", locationOfUse);
     const res: BorrowState = await createBorrowing({}, formData);
     setSubmitting(false);
     if (res?.error) {
@@ -82,13 +122,35 @@ export function BorrowForm({ initialItemCode }: { initialItemCode?: string }) {
       return;
     }
     if (res?.id) {
-      router.push(`/history?success=${res.id}`);
+      if (jobId) router.push(`/jobs/${jobId}`);
+      else router.push(`/history?success=${res.id}`);
     }
   }
 
   return (
     <form action={handleSubmit} className="space-y-5">
       <SectionTitle title="Buat Peminjaman" />
+
+      <Card className="space-y-3 p-4">
+        <h3 className="text-sm font-semibold text-zinc-900">Pekerjaan (opsional)</h3>
+        <Select
+          name="job_id"
+          label="Untuk Job"
+          value={jobId}
+          onChange={(e) => setJobId(e.target.value)}
+        >
+          <option value="">- Tidak terkait job -</option>
+          {jobs.map((j) => (
+            <option key={j.id} value={j.id}>
+              {j.job_number} · {j.title}
+              {j.area ? ` (${j.area})` : ""}
+            </option>
+          ))}
+        </Select>
+        <p className="text-xs text-zinc-500">
+          Jika dipilih, tool tercatat untuk job ini (siapa meminjam untuk pekerjaan apa).
+        </p>
+      </Card>
 
       {/* Step 1: pick items */}
       <Card className="p-4">
@@ -183,12 +245,16 @@ export function BorrowForm({ initialItemCode }: { initialItemCode?: string }) {
           placeholder="contoh: Perbaikan mesin produksi line 2"
           rows={2}
           required
+          value={purpose}
+          onChange={(e) => setPurpose(e.target.value)}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             name="location_of_use"
             label="Lokasi Penggunaan"
             placeholder="contoh: Workshop / Pabrik"
+            value={locationOfUse}
+            onChange={(e) => setLocationOfUse(e.target.value)}
           />
           <Input
             name="expected_return_date"
@@ -210,7 +276,7 @@ export function BorrowForm({ initialItemCode }: { initialItemCode?: string }) {
         <Button type="submit" disabled={submitting || cart.length === 0}>
           {submitting ? "Menyimpan..." : "Konfirmasi Peminjaman"}
         </Button>
-        <Button href="/borrow" variant="secondary">
+        <Button href={jobId ? `/jobs/${jobId}` : "/borrow"} variant="secondary">
           Batal
         </Button>
       </div>

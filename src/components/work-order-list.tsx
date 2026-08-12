@@ -37,9 +37,12 @@ export function WorkOrderList({ workOrders, canManage }: { workOrders: WorkOrder
       <SectionTitle
         title={`Work Order (${filtered.length})`}
         action={
-          canManage && (
-            <Button href="/jobs/new" variant="secondary">+ Buat Job (otomatis WO)</Button>
-          )
+          <div className="flex flex-wrap gap-2">
+            <Button href="/simip-wo" variant="secondary">WO SIMIP</Button>
+            {canManage && (
+              <Button href="/jobs/new" variant="secondary">+ Buat Job</Button>
+            )}
+          </div>
         }
       />
 

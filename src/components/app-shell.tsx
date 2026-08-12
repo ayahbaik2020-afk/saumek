@@ -19,7 +19,8 @@ const NAV: NavItem[] = [
   { href: "/scan", label: "Scan QR", icon: "📷", roles: ["admin", "mechanic", "supervisor", "foreman"] },
   { href: "/jobs", label: "Pekerjaan (Job)", icon: "🔧", roles: ["admin", "mechanic", "supervisor", "foreman", "management"] },
   { href: "/jobs/calendar", label: "Kalender Job", icon: "📅", roles: ["admin", "supervisor", "foreman", "management"] },
-  { href: "/work-orders", label: "Work Order", icon: "📋", roles: ["admin", "supervisor", "foreman"] },
+  { href: "/simip-wo", label: "WO SIMIP", icon: "🛰️", roles: ["admin", "supervisor", "foreman", "management"] },
+  { href: "/work-orders", label: "WO Internal", icon: "📋", roles: ["admin", "supervisor", "foreman"] },
   { href: "/people", label: "Personel", icon: "👷", roles: ["admin", "supervisor", "foreman"] },
   { href: "/skills", label: "Skills", icon: "🎓", roles: ["admin", "supervisor"] },
   { href: "/certificates", label: "Sertifikat", icon: "📜", roles: ["admin", "supervisor", "management"] },
@@ -35,7 +36,7 @@ const NAV: NavItem[] = [
   { href: "/locations", label: "Lokasi", icon: "📍", roles: ["admin"] },
   { href: "/maintenance", label: "Maintenance", icon: "🔧", roles: ["admin"] },
   { href: "/stock-opname", label: "Stock Opname", icon: "📋", roles: ["admin"] },
-  { href: "/reports", label: "Laporan", icon: "📊", roles: ["admin", "supervisor"] },
+  { href: "/reports", label: "Laporan", icon: "📊", roles: ["admin", "supervisor", "foreman", "management"] },
   { href: "/users", label: "User", icon: "👥", roles: ["admin"] },
   { href: "/audit", label: "Audit Trail", icon: "🧾", roles: ["admin"] },
 ];
@@ -69,7 +70,7 @@ export function AppShell({
       {/* Sidebar (desktop) */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-zinc-200 bg-white lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-zinc-100 px-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)] text-sm font-bold text-white">
             S
           </div>
           <div>
@@ -83,8 +84,10 @@ export function AppShell({
               key={item.href}
               href={item.href}
               className={cn(
-                "mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
-                isActive(item.href) && "bg-blue-50 text-blue-700"
+                "mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 transition-all duration-200 ease-out",
+                "hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]",
+                isActive(item.href) &&
+                  "bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold ring-1 ring-inset ring-blue-100"
               )}
             >
               <span className="text-base">{item.icon}</span>
@@ -113,7 +116,7 @@ export function AppShell({
       {/* Mobile header */}
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-zinc-200 bg-white px-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-primary)] text-xs font-bold text-white">
             S
           </div>
           <p className="text-sm font-bold text-zinc-900">SAUMEK</p>
@@ -155,8 +158,9 @@ export function AppShell({
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100",
-                  isActive(item.href) && "bg-blue-50 text-blue-700"
+                  "mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-600 transition-colors duration-150 ease-out active:scale-[0.98]",
+                  isActive(item.href) &&
+                    "bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-semibold"
                 )}
               >
                 <span className="text-base">{item.icon}</span>
@@ -189,8 +193,8 @@ export function AppShell({
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-zinc-500",
-              isActive(item.href) && "text-blue-600"
+              "flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-zinc-500 transition-colors duration-150 ease-out active:scale-[0.98]",
+              isActive(item.href) && "text-[var(--color-primary)] font-semibold"
             )}
           >
             <span className="text-xl">{item.icon}</span>

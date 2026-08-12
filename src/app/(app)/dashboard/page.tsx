@@ -105,7 +105,7 @@ export default async function DashboardPage() {
         <StatCard label="Total Barang" value={items.length} />
         <StatCard label="Available" value={count("AVAILABLE")} color="text-emerald-600" />
         <StatCard label="Dipinjam" value={count("BORROWED")} color="text-amber-600" />
-        <StatCard label="Maintenance" value={count("MAINTENANCE")} color="text-violet-600" />
+        <StatCard label="Maintenance" value={count("MAINTENANCE")} color="text-blue-600" />
         <StatCard label="Rusak" value={count("DAMAGED")} color="text-rose-600" />
         <StatCard label="Hilang" value={count("LOST")} color="text-zinc-600" />
       </div>
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-3 gap-3">
         <Card className="px-4 py-3">
           <p className="text-xs font-medium text-zinc-500">Peminjaman Hari Ini</p>
-          <p className="mt-1 text-2xl font-bold text-blue-600">{borrowedToday}</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--color-primary)]">{borrowedToday}</p>
         </Card>
         <Card className="px-4 py-3">
           <p className="text-xs font-medium text-zinc-500">Pengembalian Hari Ini</p>
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
             <SectionTitle
               title="Overdue"
               action={
-                <Link href="/overdue" className="text-xs font-medium text-blue-600 hover:underline">
+                <Link href="/overdue" className="text-xs font-medium text-[var(--color-primary)] hover:underline">
                   Lihat semua
                 </Link>
               }
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
                 {topItems.map((item, i) => (
                   <div key={item.name} className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-xs font-bold text-[var(--color-primary)]">
                         {i + 1}
                       </span>
                       <p className="text-sm font-medium text-zinc-900">{item.name}</p>
@@ -189,11 +189,11 @@ export default async function DashboardPage() {
       {showJobs && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <StatCard label="Total Job" value={jobs.length} />
-          <StatCard label="Direncanakan" value={jobCount("PLANNED")} color="text-sky-600" />
-          <StatCard label="Siap" value={jobCount("READY")} color="text-teal-600" />
+          <StatCard label="Direncanakan" value={jobCount("PLANNED")} color="text-blue-600" />
+          <StatCard label="Siap" value={jobCount("READY")} color="text-emerald-600" />
           <StatCard label="Berjalan" value={jobCount("IN_PROGRESS")} color="text-amber-600" />
           <StatCard label="Selesai" value={jobCount("COMPLETED")} color="text-emerald-600" />
-          <StatCard label="Personel Aktif" value={activeEmployeesCount} color="text-blue-600" />
+          <StatCard label="Personel Aktif" value={activeEmployeesCount} color="text-[var(--color-primary)]" />
         </div>
       )}
 
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
           <SectionTitle
             title="Pekerjaan Aktif"
             action={
-              <Link href="/jobs" className="text-xs font-medium text-blue-600 hover:underline">
+              <Link href="/jobs" className="text-xs font-medium text-[var(--color-primary)] hover:underline">
                 Lihat semua
               </Link>
             }
@@ -215,7 +215,7 @@ export default async function DashboardPage() {
                 <Link
                   key={j.id}
                   href={`/jobs/${j.id}`}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-zinc-50"
+                  className="flex items-center justify-between px-4 py-3 transition-colors duration-150 ease-out hover:bg-zinc-50"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-zinc-900">{j.title}</p>
@@ -236,7 +236,7 @@ export default async function DashboardPage() {
         <SectionTitle
           title="Transaksi Terbaru"
           action={
-            <Link href="/history" className="text-xs font-medium text-blue-600 hover:underline">
+            <Link href="/history" className="text-xs font-medium text-[var(--color-primary)] hover:underline">
               Lihat semua
             </Link>
           }
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
             <Link
               key={b.id}
               href="/history"
-              className="flex items-center justify-between px-4 py-3 hover:bg-zinc-50"
+              className="flex items-center justify-between px-4 py-3 transition-colors duration-150 ease-out hover:bg-zinc-50"
             >
               <div>
                 <p className="text-sm font-medium text-zinc-900">

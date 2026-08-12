@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardHeader, Button } from "@/components/ui";
+import { MirrorSimipButton } from "@/components/mirror-simip-button";
 import { formatDateTime } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -60,9 +61,15 @@ export default async function SyncStatusCard() {
         title="Sinkronisasi Work Order SIMIP"
         subtitle="Data WO mekanikal (MS/MR) disalin dari MIPRO/SAUSIMIP ke Supabase oleh sync-agent."
         action={
-          <Button href="/api/sync-agent/download" className="shrink-0">
-            ⬇ Unduh saumek-sync.ps1
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <MirrorSimipButton className="shrink-0 px-3 py-2 text-xs" />
+            <Button href="/simip-wo" variant="secondary" className="shrink-0">
+              Lihat WO SIMIP
+            </Button>
+            <Button href="/api/sync-agent/download" className="shrink-0">
+              ⬇ Unduh saumek-sync.ps1
+            </Button>
+          </div>
         }
       />
 

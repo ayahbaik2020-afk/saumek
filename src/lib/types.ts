@@ -96,6 +96,7 @@ export interface Borrowing {
   id: string;
   transaction_number: string;
   borrower_id: string;
+  job_id: string | null;
   purpose: string | null;
   location_of_use: string | null;
   borrow_date: string;
@@ -106,6 +107,7 @@ export interface Borrowing {
   created_at: string;
   updated_at: string;
   profiles?: Profile | null;
+  jobs?: { id: string; job_number: string; title: string } | null;
   borrowing_items?: BorrowingItem[];
 }
 
@@ -301,6 +303,40 @@ export interface WorkOrder {
   updated_at: string;
 }
 
+export type ExternalWoStatus =
+  | "OPEN"
+  | "PLANNED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export interface ExternalWorkOrder {
+  id: string;
+  source_system: string;
+  external_wo_id: string | null;
+  wo_number: string;
+  title: string | null;
+  description: string | null;
+  plant: string | null;
+  area: string | null;
+  location: string | null;
+  equipment: string | null;
+  wo_type: string | null;
+  priority: Priority | null;
+  external_status: ExternalWoStatus | null;
+  requested_at: string | null;
+  planned_start: string | null;
+  planned_finish: string | null;
+  actual_start: string | null;
+  actual_finish: string | null;
+  external_updated_at: string | null;
+  synced_at: string | null;
+  raw_data?: Record<string, unknown> | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export type JobStatus =
   | "PLANNED"
   | "READY"
@@ -313,6 +349,7 @@ export interface Job {
   id: string;
   job_number: string;
   wo_id: string | null;
+  external_wo_id: string | null;
   title: string;
   description: string | null;
   plant: string | null;
@@ -332,6 +369,7 @@ export interface Job {
   created_at: string;
   updated_at: string;
   work_orders?: WorkOrder | null;
+  external_work_orders?: ExternalWorkOrder | null;
   pic?: Employee | null;
   supervisor?: Employee | null;
   job_manpower?: JobManpower[];

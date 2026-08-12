@@ -11,7 +11,7 @@ export default async function JobCalendarPage() {
 
   const { data: jobs = [] } = await supabase
     .from("jobs")
-    .select("*")
+    .select("*, external_work_orders(wo_number)")
     .order("planned_start", { ascending: true });
 
   return <JobCalendar jobs={(jobs as unknown) as Job[]} />;

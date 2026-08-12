@@ -74,6 +74,62 @@ async function recomputeItemStatus(itemId: string, changedBy: string, reason: st
   }
 }
 
+/** Mark job_tools as ISSUED when items are borrowed for a job; create row if missing. */
+async function markJobToolsIssued(
+  jobId: string,
+  lines: BorrowLine[]
+) {
+  const db = adminDb();
+  for (const line of lines) {
+    const { data: existing } = await db
+      .from("job_tools")
+      .select("id, status")
+      .eq("job_id", jobId)
+      .eq("item_id", line.itemId)
+      .maybeSingle();
+
+    if (existing) {
+      if (existing.status === "REQUIRED" || existing.status === "RESERVED") {
+        await db
+          .from("job_tools")
+          .update({ status: "ISSUED", quantity: line.quantity })
+          .eq("id", existing.id);
+      }
+    } else {
+      await db.from("job_tools").insert({
+        job_id: jobId,
+        item_id: line.itemId,
+        quantity: line.quantity,
+        status: "ISSUED",
+        notes: "Dari peminjaman",
+      });
+    }
+  }
+}
+
+/** When items return for a job, set job_tools RETURNED if no outstanding borrow for that job+item. */
+async function refreshJobToolReturnStatus(jobId: string, itemIds: string[]) {
+  const db = adminDb();
+  for (const itemId of itemIds) {
+    const { data: openBorrowings } = await db
+      .from("borrowings")
+      .select("id, borrowing_items!inner(item_id, status)")
+      .eq("job_id", jobId)
+      .not("status", "in", "(CANCELLED,RETURNED)")
+      .eq("borrowing_items.item_id", itemId)
+      .neq("borrowing_items.status", "RETURNED");
+
+    if ((openBorrowings ?? []).length > 0) continue;
+
+    await db
+      .from("job_tools")
+      .update({ status: "RETURNED" })
+      .eq("job_id", jobId)
+      .eq("item_id", itemId)
+      .eq("status", "ISSUED");
+  }
+}
+
 export async function createBorrowing(
   _state: BorrowState,
   formData: FormData
@@ -85,6 +141,8 @@ export async function createBorrowing(
   const locationOfUse = String(formData.get("location_of_use") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim() || null;
   const expectedReturn = String(formData.get("expected_return_date") ?? "").trim();
+  const jobIdRaw = String(formData.get("job_id") ?? "").trim();
+  const jobId = jobIdRaw || null;
 
   if (!purpose) return { error: "Keperluan peminjaman wajib diisi." };
 
@@ -115,6 +173,18 @@ export async function createBorrowing(
   }
 
   const db = adminDb();
+
+  if (jobId) {
+    const { data: job } = await db
+      .from("jobs")
+      .select("id, status")
+      .eq("id", jobId)
+      .maybeSingle();
+    if (!job) return { error: "Job tidak ditemukan." };
+    if (job.status === "CANCELLED" || job.status === "COMPLETED") {
+      return { error: "Tidak bisa pinjam tool untuk job yang sudah selesai/dibatalkan." };
+    }
+  }
 
   // Validate each line
   for (const line of lines) {
@@ -154,6 +224,7 @@ export async function createBorrowing(
     .insert({
       transaction_number: transactionNumber,
       borrower_id: borrower.id,
+      job_id: jobId,
       purpose,
       location_of_use: locationOfUse || null,
       expected_return_date: expectedReturn ? new Date(expectedReturn).toISOString() : null,
@@ -176,10 +247,16 @@ export async function createBorrowing(
     await setItemBorrowed(line.itemId, borrower.id, transactionNumber);
   }
 
+  if (jobId) {
+    await markJobToolsIssued(jobId, lines);
+  }
+
   await db.from("notifications").insert({
     user_id: borrower.id,
     title: "Peminjaman berhasil",
-    message: `Transaksi ${transactionNumber} berhasil dibuat.`,
+    message: jobId
+      ? `Transaksi ${transactionNumber} untuk job tersimpan.`
+      : `Transaksi ${transactionNumber} berhasil dibuat.`,
     type: "success",
   });
 
@@ -189,7 +266,11 @@ export async function createBorrowing(
     action: "BORROW ITEM",
     module: "Transaksi",
     recordId: borrowing.id,
-    newValue: { transaction_number: transactionNumber, lines: lines.length },
+    newValue: {
+      transaction_number: transactionNumber,
+      lines: lines.length,
+      job_id: jobId,
+    },
   });
 
   revalidatePath("/borrow");
@@ -197,6 +278,10 @@ export async function createBorrowing(
   revalidatePath("/inventory");
   revalidatePath("/my-items");
   revalidatePath("/history");
+  if (jobId) {
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath("/jobs");
+  }
   return { id: borrowing.id };
 }
 
@@ -223,7 +308,7 @@ export async function processReturn(
 
   const { data: borrowing } = await db
     .from("borrowings")
-    .select("id, transaction_number, status")
+    .select("id, transaction_number, status, job_id")
     .eq("id", borrowingId)
     .single();
 
@@ -370,12 +455,23 @@ export async function processReturn(
     newValue: { return_number: returnNumber },
   });
 
+  if (borrowing.job_id) {
+    await refreshJobToolReturnStatus(
+      borrowing.job_id,
+      lines.map((l) => l.itemId)
+    );
+  }
+
   revalidatePath("/returns");
   revalidatePath("/borrow");
   revalidatePath("/dashboard");
   revalidatePath("/inventory");
   revalidatePath("/my-items");
   revalidatePath("/history");
+  if (borrowing.job_id) {
+    revalidatePath(`/jobs/${borrowing.job_id}`);
+    revalidatePath("/jobs");
+  }
   return { id: returnRec.id };
 }
 
@@ -385,7 +481,7 @@ export async function cancelBorrowing(id: string) {
 
   const { data: borrowing } = await db
     .from("borrowings")
-    .select("status")
+    .select("status, job_id")
     .eq("id", id)
     .single();
   if (!borrowing) return { error: "Transaksi tidak ditemukan." };
@@ -411,6 +507,10 @@ export async function cancelBorrowing(id: string) {
     await recomputeItemStatus(itemId, admin.id, `cancel ${id}`);
   }
 
+  if (borrowing.job_id) {
+    await refreshJobToolReturnStatus(borrowing.job_id, itemIds);
+  }
+
   await logAudit({
     userId: admin.id,
     userName: admin.name,
@@ -422,5 +522,8 @@ export async function cancelBorrowing(id: string) {
   revalidatePath("/borrow");
   revalidatePath("/dashboard");
   revalidatePath("/inventory");
+  if (borrowing.job_id) {
+    revalidatePath(`/jobs/${borrowing.job_id}`);
+  }
   return {};
 }

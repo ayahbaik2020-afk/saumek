@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui";
+import { StatusBadge } from "@/components/ui";
 import {
   BORROWING_STATUS,
   ITEM_STATUS,
@@ -28,55 +28,55 @@ import type {
 
 export function ItemStatusBadge({ status }: { status: ItemStatus }) {
   const meta = ITEM_STATUS[status] ?? ITEM_STATUS.INACTIVE;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function BorrowingStatusBadge({ status }: { status: BorrowingStatus }) {
   const meta = BORROWING_STATUS[status] ?? BORROWING_STATUS.BORROWED;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function JobStatusBadge({ status }: { status: JobStatus }) {
   const meta = JOB_STATUS[status] ?? JOB_STATUS.PLANNED;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function WoStatusBadge({ status }: { status: WoStatus }) {
   const meta = WO_STATUS[status] ?? WO_STATUS.OPEN;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function PriorityBadge({ priority }: { priority: Priority }) {
   const meta = PRIORITY[priority] ?? PRIORITY.NORMAL;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function CertStatusBadge({ status }: { status: CertStatus }) {
   const meta = CERT_STATUS[status] ?? CERT_STATUS.VALID;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function DevStatusBadge({ status }: { status: DevStatus }) {
   const meta = DEV_STATUS[status] ?? DEV_STATUS.PLANNED;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function PermitStatusBadge({ status }: { status: PermitStatus }) {
   const meta = PERMIT_STATUS[status] ?? PERMIT_STATUS.PENDING;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function EmploymentBadge({ status }: { status: EmploymentStatus }) {
   const meta = EMPLOYMENT_STATUS[status] ?? EMPLOYMENT_STATUS.ACTIVE;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function ViolationSeverityBadge({ severity }: { severity: ViolationSeverity }) {
   const meta = VIOLATION_SEVERITY[severity] ?? VIOLATION_SEVERITY.MINOR;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }
 
 export function JobToolStatusBadge({ status }: { status: JobToolStatus }) {
   const meta = JOB_TOOL_STATUS[status] ?? JOB_TOOL_STATUS.REQUIRED;
-  return <Badge className={meta.color}>{meta.label}</Badge>;
+  return <StatusBadge tone={meta.tone} label={meta.label} />;
 }

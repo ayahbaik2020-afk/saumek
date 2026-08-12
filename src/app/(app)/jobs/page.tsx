@@ -12,7 +12,7 @@ export default async function JobsPage() {
   const { data: jobs = [] } = await supabase
     .from("jobs")
     .select(
-      "*, work_orders(wo_number), pic:employees!jobs_pic_id_fkey(name, employee_id), supervisor:employees!jobs_supervisor_id_fkey(name, employee_id)"
+      "*, work_orders(wo_number), external_work_orders(wo_number, external_status), pic:employees!jobs_pic_id_fkey(name, employee_id), supervisor:employees!jobs_supervisor_id_fkey(name, employee_id), job_manpower(is_pic, employees(name))"
     )
     .order("created_at", { ascending: false });
 

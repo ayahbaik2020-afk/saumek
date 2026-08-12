@@ -36,13 +36,13 @@ export default async function AuditPage() {
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {logsData.map((log) => (
-                <tr key={log.id} className="hover:bg-zinc-50">
+                <tr key={log.id} className="transition-colors duration-150 ease-out hover:bg-zinc-50">
                   <td className="whitespace-nowrap px-4 py-3 text-zinc-600">
                     {formatDateTime(log.created_at)}
                   </td>
                   <td className="px-4 py-3 text-zinc-700">{log.user_name ?? "-"}</td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-xs font-medium text-[var(--color-primary)]">
                       {log.action}
                     </span>
                   </td>
@@ -61,7 +61,7 @@ export default async function AuditPage() {
         {logsData.map((log) => (
           <Card key={log.id} className="p-4">
             <div className="flex items-center justify-between">
-              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+              <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-xs font-medium text-[var(--color-primary)]">
                 {log.action}
               </span>
               <span className="text-xs text-zinc-400">

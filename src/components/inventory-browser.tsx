@@ -107,9 +107,9 @@ export function InventoryBrowser({
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {filtered.map((item) => (
-                <tr key={item.id} className="hover:bg-zinc-50">
+                <tr key={item.id} className="transition-colors duration-150 ease-out hover:bg-zinc-50">
                   <td className="px-4 py-3">
-                    <Link href={`/inventory/${item.id}`} className="font-medium text-zinc-900 hover:text-blue-600">
+                    <Link href={`/inventory/${item.id}`} className="font-medium text-zinc-900 transition-colors duration-150 ease-out hover:text-[var(--color-primary)]">
                       {item.name}
                     </Link>
                     <p className="text-xs text-zinc-500">{item.item_code}</p>
@@ -137,7 +137,7 @@ export function InventoryBrowser({
       <div className="grid gap-3 md:hidden">
         {filtered.map((item) => (
           <Link key={item.id} href={`/inventory/${item.id}`}>
-            <Card className="p-4">
+            <Card interactive className="p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold text-zinc-900">{item.name}</p>
