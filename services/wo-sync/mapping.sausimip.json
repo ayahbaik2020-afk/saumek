@@ -1,0 +1,58 @@
+{
+  "_note": "Mapping MIPRO/SAUSIMIP (tabel MIP_WORKORDER). WOPM1 = section pelaksana (MS/MR/MC = mekanikal). STATUS CAN & CLOSE dieksklusi (batal/tutup); nilai status asli Maximo tetap tersimpan di raw_data.STATUS. incremental_field = CHANGEDATE (timestamp perubahan terakhir). priority_mapping diasumsikan skala Maximo: angka lebih kecil = lebih urgent (1-2 URGENT, 3-4 HIGH, 5-6 NORMAL, 7-9 LOW).",
+  "source_system": "SAUSIMIP",
+  "table": "MIP_WORKORDER",
+  "incremental_field": "CHANGEDATE",
+  "save_raw_data": true,
+  "filters": [
+    { "column": "WOPM1", "op": "like", "value": "M%" },
+    { "column": "STATUS", "op": "notin", "values": ["CAN", "CLOSE"] }
+  ],
+  "fields": {
+    "external_wo_id": "WONUM",
+    "wo_number": "WONUM",
+    "title": "DESCRIPTION",
+    "description": "DESCRIPTION",
+    "plant": "TBD",
+    "area": "WOPM1",
+    "location": "LOCATION",
+    "equipment": "EQNUM",
+    "wo_type": "WORKTYPE",
+    "priority": "WOPRIORITY",
+    "external_status": "STATUS",
+    "requested_at": "REPORTDATE",
+    "planned_start": "TARGSTARTDATE",
+    "planned_finish": "TARGCOMPDATE",
+    "actual_start": "ACTSTART",
+    "actual_finish": "ACTFINISH",
+    "external_updated_at": "CHANGEDATE"
+  },
+  "status_mapping": {
+    "APPREQ": "OPEN",
+    "PREAP": "OPEN",
+    "PREAP1": "OPEN",
+    "PREAP2": "OPEN",
+    "WAPPR": "OPEN",
+    "APPR": "PLANNED",
+    "WSCH": "PLANNED",
+    "WMATL": "PLANNED",
+    "PRWMATL": "PLANNED",
+    "WPCOND": "PLANNED",
+    "INPRG": "IN_PROGRESS",
+    "WCOMP": "COMPLETED",
+    "COMP": "COMPLETED",
+    "CAN": "CANCELLED",
+    "CLOSE": "COMPLETED"
+  },
+  "priority_mapping": {
+    "1": "URGENT",
+    "2": "URGENT",
+    "3": "HIGH",
+    "4": "HIGH",
+    "5": "NORMAL",
+    "6": "NORMAL",
+    "7": "LOW",
+    "8": "LOW",
+    "9": "LOW"
+  }
+}

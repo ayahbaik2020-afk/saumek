@@ -1,0 +1,27 @@
+{
+  "source_system": "SAUSIMIP",
+  "table": "TBD",
+  "incremental_field": "TBD",
+  "save_raw_data": true,
+  "fields": {
+    "external_wo_id": "TBD",
+    "wo_number": "TBD",
+    "title": "TBD",
+    "description": "TBD",
+    "plant": "TBD",
+    "area": "TBD",
+    "location": "TBD",
+    "equipment": "TBD",
+    "wo_type": "TBD",
+    "priority": "TBD",
+    "external_status": "TBD",
+    "requested_at": "TBD",
+    "planned_start": "TBD",
+    "planned_finish": "TBD",
+    "actual_start": "TBD",
+    "actual_finish": "TBD",
+    "external_updated_at": "TBD"
+  },
+  "status_mapping": {},
+  "priority_mapping": {}
+}

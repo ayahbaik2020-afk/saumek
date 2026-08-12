@@ -1,0 +1,31 @@
+{
+  "source_system": "SAUSIMIP",
+  "table": "(sample)",
+  "incremental_field": "UPDATE_AT",
+  "save_raw_data": true,
+  "fields": {
+    "external_wo_id": "WO_ID",
+    "wo_number": "WO_NO",
+    "title": "JUDUL",
+    "description": "DESKRIPSI",
+    "plant": "PLANT",
+    "area": "AREA",
+    "location": "LOKASI",
+    "equipment": "EQUIPMENT",
+    "wo_type": "TIPE",
+    "priority": "PRIORITAS",
+    "external_status": "STATUS",
+    "requested_at": "TGL_REQUEST",
+    "planned_start": "PLAN_MULAI",
+    "planned_finish": "PLAN_SELESAI",
+    "actual_start": "AKTUAL_MULAI",
+    "actual_finish": "AKTUAL_SELESAI",
+    "external_updated_at": "UPDATE_AT"
+  },
+  "status_mapping": {
+    "APPROVED": "PLANNED",
+    "IN PROGRESS": "IN_PROGRESS",
+    "COMPLETE": "COMPLETED"
+  },
+  "priority_mapping": {}
+}

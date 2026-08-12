@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardHeader, StatCard, SectionTitle, Button } from "@/components/ui";
 import { ItemStatusBadge, BorrowingStatusBadge, JobStatusBadge } from "@/components/status-badge";
 import { formatDateTime, daysOverdue, todayISO } from "@/lib/constants";
+import { SimipSyncCard } from "@/components/simip-sync";
 import type { BorrowingStatus, JobStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -95,6 +96,10 @@ export default async function DashboardPage() {
           Selamat datang, {profile.name.split(" ")[0]} 👋
         </p>
       </div>
+
+      {["admin", "supervisor", "foreman"].includes(profile.role) && (
+        <SimipSyncCard />
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Total Barang" value={items.length} />

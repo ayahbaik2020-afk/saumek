@@ -1,0 +1,16 @@
+{
+  "name": "wo-sync",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WO Sync Service: MIPRO/SAUSIMIP (SQL Server) -> Supabase external_work_orders",
+  "scripts": {
+    "discover": "node wo-sync.mjs discover",
+    "sync": "node wo-sync.mjs sync --mapping mapping.sausimip.json",
+    "sync:json": "node wo-sync.mjs sync:json --mapping mapping.sample.json --source sample-source.json"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "mssql": "^11.0.1"
+  }
+}

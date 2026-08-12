@@ -420,6 +420,64 @@ create table if not exists public.job_daily_reports (
   created_at timestamptz not null default now()
 );
 
+-- ---------- EXTERNAL WORK ORDER INTEGRATION (WO Sync) ----------
+
+-- Copy of WO from external source (SAUSIMIP). SAUSIMIP = source of truth,
+-- this table is the integrated/operational copy. Unique per source_system + wo_number.
+create table if not exists public.external_work_orders (
+  id uuid primary key default gen_random_uuid(),
+  source_system text not null default 'SAUSIMIP',
+  external_wo_id text,
+  wo_number text not null,
+  title text,
+  description text,
+  plant text,
+  area text,
+  location text,
+  equipment text,
+  wo_type text,
+  priority text,
+  external_status text,
+  requested_at timestamptz,
+  planned_start timestamptz,
+  planned_finish timestamptz,
+  actual_start timestamptz,
+  actual_finish timestamptz,
+  external_updated_at timestamptz,
+  synced_at timestamptz not null default now(),
+  raw_data jsonb,
+  is_active boolean not null default true,
+  deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (source_system, wo_number)
+);
+
+create table if not exists public.wo_sync_logs (
+  id uuid primary key default gen_random_uuid(),
+  started_at timestamptz not null default now(),
+  finished_at timestamptz,
+  status text not null default 'RUNNING' check (status in ('RUNNING','SUCCESS','PARTIAL','FAILED')),
+  total_read integer not null default 0,
+  total_inserted integer not null default 0,
+  total_updated integer not null default 0,
+  total_skipped integer not null default 0,
+  total_failed integer not null default 0,
+  error_message text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.wo_sync_errors (
+  id uuid primary key default gen_random_uuid(),
+  sync_log_id uuid references public.wo_sync_logs(id) on delete cascade,
+  external_wo_id text,
+  wo_number text,
+  error_type text,
+  error_message text,
+  raw_data jsonb,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- NOTIFICATIONS ----------
 
 create table if not exists public.notifications (
@@ -593,6 +651,9 @@ for each row execute function public.set_updated_at();
 create trigger set_updated_at before update on public.jobs
 for each row execute function public.set_updated_at();
 
+create trigger set_updated_at before update on public.external_work_orders
+for each row execute function public.set_updated_at();
+
 -- Auto-create profile on new auth user
 create or replace function public.handle_new_user()
 returns trigger
@@ -643,6 +704,11 @@ create index if not exists idx_jobs_planned on public.jobs (planned_start);
 create index if not exists idx_wo_number on public.work_orders (wo_number);
 create index if not exists idx_job_manpower_job on public.job_manpower (job_id);
 create index if not exists idx_job_tools_job on public.job_tools (job_id);
+create index if not exists idx_ewo_status on public.external_work_orders (external_status);
+create index if not exists idx_ewo_planned_start on public.external_work_orders (planned_start);
+create index if not exists idx_ewo_plant_area on public.external_work_orders (plant, area);
+create index if not exists idx_ewo_external_wo_id on public.external_work_orders (external_wo_id);
+create index if not exists idx_wo_sync_errors_log on public.wo_sync_errors (sync_log_id);
 
 -- ---------- ROW LEVEL SECURITY ----------
 
@@ -680,6 +746,9 @@ alter table public.job_permits enable row level security;
 alter table public.job_checklists enable row level security;
 alter table public.job_progress enable row level security;
 alter table public.job_daily_reports enable row level security;
+alter table public.external_work_orders enable row level security;
+alter table public.wo_sync_logs enable row level security;
+alter table public.wo_sync_errors enable row level security;
 
 -- Reads: any authenticated user
 drop policy if exists "read roles" on public.roles;
@@ -775,6 +844,15 @@ create policy "read job_progress" on public.job_progress for select to authentic
 drop policy if exists "read job_daily_reports" on public.job_daily_reports;
 create policy "read job_daily_reports" on public.job_daily_reports for select to authenticated using (true);
 
+drop policy if exists "read external_work_orders" on public.external_work_orders;
+create policy "read external_work_orders" on public.external_work_orders for select to authenticated using (true);
+
+drop policy if exists "read wo_sync_logs" on public.wo_sync_logs;
+create policy "read wo_sync_logs" on public.wo_sync_logs for select to authenticated using (true);
+
+drop policy if exists "read wo_sync_errors" on public.wo_sync_errors;
+create policy "read wo_sync_errors" on public.wo_sync_errors for select to authenticated using (true);
+
 -- Notifications: only own
 drop policy if exists "read own notifications" on public.notifications;
 create policy "read own notifications" on public.notifications for select to authenticated using (user_id = auth.uid());
@@ -861,6 +939,16 @@ create policy "write job_progress" on public.job_progress for all to authenticat
 
 drop policy if exists "write job_daily_reports" on public.job_daily_reports;
 create policy "write job_daily_reports" on public.job_daily_reports for all to authenticated using (true) with check (true);
+
+-- WO sync tables: writes via service role (bypasses RLS); managers may manage
+drop policy if exists "manager write external_work_orders" on public.external_work_orders;
+create policy "manager write external_work_orders" on public.external_work_orders for all to authenticated using (public.is_manager()) with check (public.is_manager());
+
+drop policy if exists "manager write wo_sync_logs" on public.wo_sync_logs;
+create policy "manager write wo_sync_logs" on public.wo_sync_logs for all to authenticated using (public.is_manager()) with check (public.is_manager());
+
+drop policy if exists "manager write wo_sync_errors" on public.wo_sync_errors;
+create policy "manager write wo_sync_errors" on public.wo_sync_errors for all to authenticated using (public.is_manager()) with check (public.is_manager());
 
 -- ---------- SEED DATA ----------
 

@@ -40,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+
+# wo-sync service
+/services/wo-sync/node_modules/
+/services/wo-sync/discovery/
+/services/wo-sync/mapping.json
+
+# MIPRO/SAUSIMIP application files (sensitive, tidak ikut commit)
+/simip/

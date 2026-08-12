@@ -109,11 +109,17 @@ const statements = splitStatements(schema);
 console.log(`Loaded ${statements.length} SQL statements.`);
 
 let ok = 0;
+let skipped = 0;
 for (let i = 0; i < statements.length; i++) {
   try {
     await client.query(statements[i]);
     ok++;
   } catch (err) {
+    if (/already exists/i.test(err.message)) {
+      console.warn(`Skipped (already exists): ${statements[i].slice(0, 80).replace(/\n/g, " ")}...`);
+      skipped++;
+      continue;
+    }
     console.error(`\nStatement ${i + 1} FAILED:`);
     console.error(statements[i].slice(0, 400));
     console.error("Error:", err.message);
@@ -122,7 +128,7 @@ for (let i = 0; i < statements.length; i++) {
   }
 }
 
-console.log(`\n${ok}/${statements.length} statements applied successfully.`);
+console.log(`\n${ok}/${statements.length} statements applied successfully (${skipped} already existed).`);
 
 const tables = await client.query(
   `select table_name from information_schema.tables where table_schema='public' order by table_name`
