@@ -14,9 +14,11 @@ perlu Node.js, cukup Windows (PowerShell 5.1 bawaan).
 
 ## Cara pakai
 
-1. **Download** folder ini (`sync-agent`) — atau file zip-nya.
-2. **Extract** di PC yang terhubung ke jaringan Sulfindo (kantor/VPN).
-3. **Double-click `sync.bat`**.
+1. **Download** `saumek-sync.ps1` dari dashboard app (tombol "Unduh
+   saumek-sync.ps1") — atau ambil folder `sync-agent` ini (zip).
+2. Simpan di PC yang terhubung ke jaringan Sulfindo (kantor/VPN).
+3. Jalankan — double-click `sync.bat` jika folder lengkap, atau langsung:
+   `powershell -NoProfile -ExecutionPolicy Bypass -File saumek-sync.ps1`
 4. Pertama kali akan diminta konfigurasi (disimpan di `config.json` di folder
    yang sama):
    - Server SQL SIMIP (default `192.168.20.10`), database `SAUSIMIP`, port `1433`
@@ -52,5 +54,5 @@ sync.bat -Limit 10         # batasi jumlah WO yang dibaca
 ## Verifikasi
 
 Setelah sync, buka dashboard https://saumek.vercel.app -> kartu
-"Sinkronisasi Work Order SIMIP" -> lihat hasil terakhir di `wo_sync_logs`
-(status SUCCESS / PARTIAL / FAILED + jumlah WO).
+"Sinkronisasi Work Order SIMIP" -> status terakhir (SUCCESS / PARTIAL / FAILED
++ jumlah WO) diambil dari `wo_sync_logs`.
