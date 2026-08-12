@@ -13,19 +13,19 @@ import {
   type ViewableAttachment,
 } from "@/lib/simip-attachments";
 
-function mergeViewables(
-  local: ViewableAttachment[],
-  remote: ViewableAttachment[]
-): ViewableAttachment[] {
-  const out: ViewableAttachment[] = [];
-  const seen = new Set<string>();
-  for (const v of [...remote, ...local]) {
-    const key = v.name;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(v);
+function windowsFileUrlFromPath(localPath: string) {
+  const normalized = localPath.replace(/\\/g, "/");
+  if (/^[A-Za-z]:/.test(normalized)) {
+    return `file:///${normalized}`;
   }
-  return out;
+  if (normalized.startsWith("//")) {
+    return `file:${normalized}`;
+  }
+  return `file:///${normalized}`;
+}
+
+function basenameAny(p: string) {
+  return (p.split("\\").pop() ?? p.split("/").pop() ?? p).trim();
 }
 
 function DownloadCard({
@@ -96,16 +96,52 @@ function AttachmentPreview({ item }: { item: ViewableAttachment }) {
 
   const local = item.localPath ?? "";
   const kind = attachmentKindLabel(attachmentKind(item));
+  if (!local) {
+    return (
+      <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <p className="font-medium">File lampiran tidak tersedia untuk WO ini ({kind}).</p>
+        <p className="text-xs leading-relaxed text-amber-800">
+          Pastikan sync sudah menyimpan path lampiran (registry) dan file fisiknya ada di PC.
+        </p>
+      </div>
+    );
+  }
+
+  const fileUrl = windowsFileUrlFromPath(local);
   return (
     <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-      <p className="font-medium">File tidak ditemukan di drive N: ({kind})</p>
+      <p className="font-medium">Preview browser tidak bisa disediakan. ({kind})</p>
       <p className="text-xs leading-relaxed text-amber-800">
-        Jalankan <code className="rounded bg-white px-1">npm run dev</code> di PC yang drive{" "}
-        <code className="rounded bg-white px-1">N:\workorder\</code> aktif. Path yang diharapkan:
+        Di mode ini SAUMEK tidak bisa streaming dari server. Buka file langsung dari Windows lewat path berikut:
       </p>
       <code className="block break-all rounded bg-white px-2 py-1.5 text-xs text-zinc-800">
         {local}
       </code>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="primary"
+          className="text-xs"
+          onClick={() => window.open(fileUrl, "_blank", "noopener,noreferrer")}
+        >
+          Buka di Windows
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          className="text-xs"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(local);
+            } catch {
+              // clipboard may be blocked; user can still manually copy from the code block.
+            }
+          }}
+        >
+          Salin path
+        </Button>
+      </div>
     </div>
   );
 }
@@ -126,14 +162,16 @@ export function SimipAttachmentViewer({
   const info = useMemo(() => resolveSimipAttachmentInfo(wo), [wo]);
   if (!info) return null;
 
-  const { wonum, viewables: localViewables, documentPaths } = info;
+  const { wonum, documentPaths } = info;
   const pathsKey = documentPaths.join("|");
-  const viewables = useMemo(
-    () => mergeViewables(localViewables, diskViewables),
-    [localViewables, diskViewables]
-  );
+  const viewables = diskViewables;
   const current = viewables[idx] ?? viewables[0];
   const fileCount = viewables.length;
+
+  const strictWoRe = useMemo(() => {
+    const escaped = wonum.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`^${escaped}_WR\\.[A-Za-z0-9]+$`, "i");
+  }, [wonum]);
 
   useEffect(() => {
     if (!open || !wonum) return;
@@ -170,17 +208,53 @@ export function SimipAttachmentViewer({
           contentType: a.contentType,
         }));
         setDiskViewables(fromDisk);
-        if (fromDisk.length === 0 && data.hint) {
-          setLoadError(data.hint);
-        }
+        if (fromDisk.length === 0) {
+          const registryViewables: ViewableAttachment[] = Array.from(
+            new Map(
+              documentPaths
+                .filter((p) => strictWoRe.test(basenameAny(p)))
+                .map((p) => {
+                  const name = basenameAny(p);
+                  return [name, { name, localPath: p } as ViewableAttachment] as const;
+                })
+            ).values()
+          );
+
+          if (registryViewables.length > 0) {
+            setDiskViewables(registryViewables);
+            setLoadError(data.hint ?? "Preview streaming dari server gagal; gunakan tombol Buka di Windows.");
+          } else if (data.hint) {
+            setLoadError(data.hint);
+          }
+        } 
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          setLoadError(
-            e instanceof Error
-              ? e.message
-              : "Gagal membaca lampiran. Pastikan npm run dev jalan di PC dengan drive N: aktif."
+          const registryViewables: ViewableAttachment[] = Array.from(
+            new Map(
+              documentPaths
+                .filter((p) => strictWoRe.test(basenameAny(p)))
+                .map((p) => {
+                  const name = basenameAny(p);
+                  return [name, { name, localPath: p } as ViewableAttachment] as const;
+                })
+            ).values()
           );
+
+          if (registryViewables.length > 0) {
+            setDiskViewables(registryViewables);
+            setLoadError(
+              e instanceof Error
+                ? `${e.message} (fallback: buka via Windows dari path registry)`
+                : "Gagal streaming dari server; fallback ke path registry untuk dibuka di Windows."
+            );
+          } else {
+            setLoadError(
+              e instanceof Error
+                ? e.message
+                : "Gagal membaca lampiran. Pastikan sync sudah menyimpan path lampiran (registry) dan file fisiknya ada di PC."
+            );
+          }
         }
       })
       .finally(() => {
@@ -208,7 +282,7 @@ export function SimipAttachmentViewer({
         title={`Lihat lampiran WO ${wonum} dari drive N:`}
       >
         Lihat lampiran ({wonum}
-        {fileCount > 1 ? ` · ${fileCount} file` : ""})
+        {fileCount > 0 ? ` · ${fileCount} file` : ""})
       </Button>
 
       {open && (

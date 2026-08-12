@@ -31,6 +31,11 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ConfigPath = Join-Path $ScriptDir 'config.json'
 $ChunkSize = 100
 
+# Pakai proxy sistem (IE/WinINET) agar Invoke-RestMethod bisa akses Supabase
+# di jaringan yang menggunakan proxy untuk akses internet.
+[System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()
+[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+
 function Join-ScriptPath([string]$Base, [string[]]$More) {
     $path = $Base
     foreach ($segment in $More) {
@@ -479,11 +484,13 @@ function Get-WoAttachmentPathsFromFolder([string]$woNumber) {
         "${root}${woNumber}_WR.pdf",
         "${root}${woNumber}_WR.jpg",
         "${root}${woNumber}_WR.jpeg",
-        "${root}${woNumber}.pdf",
-        "${root}${woNumber}.jpg",
-        "${root}${woNumber}.jpeg",
-        "${root}${woNumber}.xlsx",
-        "${root}${woNumber}.xls"
+        "${root}${woNumber}_WR.png",
+        "${root}${woNumber}_WR.gif",
+        "${root}${woNumber}_WR.webp",
+        "${root}${woNumber}_WR.xlsx",
+        "${root}${woNumber}_WR.xls",
+        "${root}${woNumber}_WR.doc",
+        "${root}${woNumber}_WR.docx"
     )
     foreach ($p in $patterns) {
         if ((Test-Path -LiteralPath $p) -and -not $paths.Contains($p)) {
@@ -494,7 +501,7 @@ function Get-WoAttachmentPathsFromFolder([string]$woNumber) {
     if (Test-Path -LiteralPath $root) {
         Get-ChildItem -LiteralPath $root -File -ErrorAction SilentlyContinue |
             Where-Object {
-                $_.Name -like "${woNumber}*" -and
+                $_.Name -like "${woNumber}_WR.*" -and
                 $SimipAttachmentExtensions -contains $_.Extension.ToLower()
             } |
             ForEach-Object {
