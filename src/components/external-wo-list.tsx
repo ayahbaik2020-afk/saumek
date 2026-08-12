@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Badge, Button, Card, EmptyState, Input, SectionTitle, Select } from "@/components/ui";
 import { WoStatusBadge, PriorityBadge } from "@/components/status-badge";
 import { MirrorSimipButton } from "@/components/mirror-simip-button";
+import { SimipAttachmentViewer } from "@/components/simip-attachment-viewer";
 import { createJobFromExternalWo } from "@/lib/job-actions";
 import { formatDate, formatDateTime } from "@/lib/constants";
 import type { ExternalWorkOrder, ExternalWoStatus, Job, Priority } from "@/lib/types";
@@ -24,14 +25,16 @@ function linkedJob(row: ExternalWoRow) {
 export function ExternalWoList({
   workOrders,
   canManage,
+  initialSearch = "",
 }: {
   workOrders: ExternalWoRow[];
   canManage: boolean;
+  initialSearch?: string;
 }) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [status, setStatus] = useState("ACTIVE");
-  const [linkFilter, setLinkFilter] = useState("UNSCHEDULED");
+  const [linkFilter, setLinkFilter] = useState(initialSearch ? "ALL" : "UNSCHEDULED");
   const [area, setArea] = useState("ALL");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +107,11 @@ export function ExternalWoList({
       <Card className="p-3">
         <p className="text-xs text-zinc-500">
           Work Order dari SAUSIMIP (sinkron). Jadwalkan menjadi job SAUMEK untuk pemantauan lapangan.
-          Satu WO hanya bisa punya satu job.
+          Tombol <strong>Lihat lampiran</strong> membaca file langsung dari drive{" "}
+          <code className="rounded bg-zinc-100 px-1">N:\workorder\</code> (contoh{" "}
+          <code className="rounded bg-zinc-100 px-1">26011225_WR.pdf</code>).
+          Hanya berfungsi saat <code className="rounded bg-zinc-100 px-1">npm run dev</code> dijalankan
+          di PC yang drive N: aktif (localhost).
         </p>
       </Card>
 
@@ -210,6 +217,14 @@ export function ExternalWoList({
                     )}
                   </div>
                   <div className="flex gap-2">
+                    <SimipAttachmentViewer
+                      wo={{
+                        wo_number: wo.wo_number,
+                        external_wo_id: wo.external_wo_id,
+                        raw_data: wo.raw_data ?? null,
+                      }}
+                      className="px-3 py-1.5 text-xs"
+                    />
                     {job && (
                       <Button href={`/jobs/${job.id}`} variant="secondary" className="px-3 py-1.5 text-xs">
                         Buka Job

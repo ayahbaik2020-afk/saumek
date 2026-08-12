@@ -27,7 +27,7 @@ export default async function JobDetailPage({ params }: PageProps<"/jobs/[id]">)
   const { data: job } = await supabase
     .from("jobs")
     .select(
-      "*, work_orders(wo_number), external_work_orders(id, wo_number, external_status, equipment), pic:employees!jobs_pic_id_fkey(name, employee_id), supervisor:employees!jobs_supervisor_id_fkey(name, employee_id)"
+      "*, work_orders(wo_number), external_work_orders(id, wo_number, external_wo_id, external_status, equipment, raw_data), pic:employees!jobs_pic_id_fkey(name, employee_id), supervisor:employees!jobs_supervisor_id_fkey(name, employee_id)"
     )
     .eq("id", id)
     .maybeSingle();

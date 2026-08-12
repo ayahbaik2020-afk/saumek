@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card, CardHeader, ErrorMessage, Input, Select, Textarea } from "@/components/ui";
 import { JobStatusBadge, PriorityBadge, JobToolStatusBadge, PermitStatusBadge, BorrowingStatusBadge } from "@/components/status-badge";
+import { SimipAttachmentViewer } from "@/components/simip-attachment-viewer";
 import {
   updateJobStatus,
   updateJobProgress,
@@ -147,7 +148,16 @@ export function JobDetail({
               {" · "}{[job.plant, job.area, job.location].filter(Boolean).join(" / ") || "-"}
             </p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-start gap-1.5">
+            {job.external_work_orders?.wo_number ? (
+              <SimipAttachmentViewer
+                wo={{
+                  wo_number: job.external_work_orders.wo_number,
+                  external_wo_id: job.external_work_orders.external_wo_id ?? null,
+                  raw_data: job.external_work_orders.raw_data ?? null,
+                }}
+              />
+            ) : null}
             {nextStatuses.map((s) => (
               <Button key={s} variant="secondary" className="px-3 py-1.5 text-xs" disabled={busy} onClick={() => run(() => updateJobStatus(job.id, s))}>
                 {s === "COMPLETED" ? "✓ Selesai" : s === "IN_PROGRESS" ? "▶ Mulai" : s === "CANCELLED" ? "✕ Batal" : s}

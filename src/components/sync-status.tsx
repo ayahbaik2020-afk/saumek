@@ -67,7 +67,7 @@ export default async function SyncStatusCard() {
               Lihat WO SIMIP
             </Button>
             <Button href="/api/sync-agent/download" className="shrink-0">
-              ⬇ Unduh saumek-sync.ps1
+              ⬇ Unduh sync-agent
             </Button>
           </div>
         }

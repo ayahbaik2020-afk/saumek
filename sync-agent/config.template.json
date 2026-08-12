@@ -1,0 +1,9 @@
+{
+  "sqlServer": "192.168.20.10",
+  "sqlDatabase": "SAUSIMIP",
+  "sqlPort": 1433,
+  "sqlAuthMode": "sql",
+  "sqlUser": "",
+  "supabaseUrl": "https://hxnazcquiheufptvbkmr.supabase.co",
+  "sourceSystem": "SAUSIMIP"
+}
