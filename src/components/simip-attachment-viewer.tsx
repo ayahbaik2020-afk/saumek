@@ -168,11 +168,6 @@ export function SimipAttachmentViewer({
   const current = viewables[idx] ?? viewables[0];
   const fileCount = viewables.length;
 
-  const strictWoRe = useMemo(() => {
-    const escaped = wonum.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`^${escaped}_WR\\.[A-Za-z0-9]+$`, "i");
-  }, [wonum]);
-
   useEffect(() => {
     if (!open || !wonum) return;
     let cancelled = false;
@@ -212,7 +207,6 @@ export function SimipAttachmentViewer({
           const registryViewables: ViewableAttachment[] = Array.from(
             new Map(
               documentPaths
-                .filter((p) => strictWoRe.test(basenameAny(p)))
                 .map((p) => {
                   const name = basenameAny(p);
                   return [name, { name, localPath: p } as ViewableAttachment] as const;
@@ -233,7 +227,6 @@ export function SimipAttachmentViewer({
           const registryViewables: ViewableAttachment[] = Array.from(
             new Map(
               documentPaths
-                .filter((p) => strictWoRe.test(basenameAny(p)))
                 .map((p) => {
                   const name = basenameAny(p);
                   return [name, { name, localPath: p } as ViewableAttachment] as const;
